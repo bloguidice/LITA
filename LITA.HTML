@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LITA™ - Loguidice Interactive Text Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .stat-card {
+            transition: all 0.3s ease-in-out;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 md:p-10">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">LITA<sup class="text-2xl font-semibold">TM</sup></h1>
+            <h2 class="text-lg font-semibold text-gray-700 mt-2">Loguidice Interactive Text Analyzer</h2>
+            <p class="text-gray-600 mt-2">Paste your text below to see a detailed analysis in real-time.</p>
+        </div>
+
+        <!-- Text input area -->
+        <div class="relative">
+            <textarea id="text-input" class="w-full h-64 p-4 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 resize-none" placeholder="Paste or type your text here..."></textarea>
+            <button id="clear-btn" class="absolute top-3 right-3 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
+                CLEAR
+            </button>
+        </div>
+
+        <!-- Statistics display -->
+        <div id="stats-container" class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <!-- Character Count Card -->
+            <div class="stat-card bg-blue-50 border border-blue-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-blue-800">Character Count</h2>
+                <p id="character-count" class="text-4xl font-bold text-blue-600 mt-2">0</p>
+            </div>
+            <!-- Letter Count Card -->
+            <div class="stat-card bg-indigo-50 border border-indigo-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-indigo-800">Letter Count</h2>
+                <p id="letter-count" class="text-4xl font-bold text-indigo-600 mt-2">0</p>
+            </div>
+            <!-- Word Count Card -->
+            <div class="stat-card bg-green-50 border border-green-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-green-800">Word Count</h2>
+                <p id="word-count" class="text-4xl font-bold text-green-600 mt-2">0</p>
+            </div>
+            <!-- Average Word Length Card -->
+            <div class="stat-card bg-pink-50 border border-pink-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-pink-800">Avg. Word Length</h2>
+                <p id="average-word-length" class="text-4xl font-bold text-pink-600 mt-2">0.00</p>
+            </div>
+            <!-- Sentence Count Card -->
+            <div class="stat-card bg-cyan-50 border border-cyan-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-cyan-800">Sentence Count</h2>
+                <p id="sentence-count" class="text-4xl font-bold text-cyan-600 mt-2">0</p>
+            </div>
+            <!-- Average Sentence Length Card -->
+            <div class="stat-card bg-orange-50 border border-orange-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-orange-800">Avg. Sentence Length</h2>
+                <p id="average-sentence-length" class="text-4xl font-bold text-orange-600 mt-2">0.00</p>
+            </div>
+            <!-- Longest Word Card -->
+            <div class="stat-card bg-yellow-50 border border-yellow-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-yellow-800">Longest Word</h2>
+                <p id="longest-word" class="text-2xl font-bold text-yellow-600 mt-4 break-words h-12 flex items-center justify-center">N/A</p>
+            </div>
+            <!-- Unique Word Count Card -->
+            <div class="stat-card bg-lime-50 border border-lime-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-lime-800">Unique Words</h2>
+                <p id="unique-word-count" class="text-4xl font-bold text-lime-600 mt-2">0</p>
+            </div>
+            <!-- Estimated Reading Time Card -->
+            <div class="stat-card bg-teal-50 border border-teal-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-teal-800">Reading Time</h2>
+                <p id="estimated-reading-time" class="text-3xl font-bold text-teal-600 mt-2">~ 0s</p>
+            </div>
+            <!-- Reading Level Card -->
+            <div class="stat-card bg-purple-50 border border-purple-200 p-6 rounded-lg text-center">
+                <h2 class="text-lg font-semibold text-purple-800">Reading Level</h2>
+                <p id="reading-level" class="text-3xl font-bold text-purple-600 mt-2">N/A</p>
+            </div>
+        </div>
+
+        <!-- Repeated Words Display -->
+        <div id="repeated-words-container" class="mt-8">
+            <h3 class="text-xl font-semibold text-gray-800 text-center mb-4">Repeated Uncommon Words Analysis</h3>
+            <div id="repeated-words-list" class="bg-gray-100 p-4 rounded-lg min-h-[100px] max-h-48 overflow-y-auto">
+                 <p class="text-gray-500 text-center">Repeated words (excluding 'the', 'and', 'or') will appear here.</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // DOM element references
+        const textInput = document.getElementById('text-input');
+        const letterCountEl = document.getElementById('letter-count');
+        const characterCountEl = document.getElementById('character-count');
+        const wordCountEl = document.getElementById('word-count');
+        const longestWordEl = document.getElementById('longest-word');
+        const repeatedWordsListEl = document.getElementById('repeated-words-list');
+        const clearBtn = document.getElementById('clear-btn');
+        const readingLevelEl = document.getElementById('reading-level');
+        const sentenceCountEl = document.getElementById('sentence-count');
+        const avgWordLengthEl = document.getElementById('average-word-length');
+        const avgSentenceLengthEl = document.getElementById('average-sentence-length');
+        const uniqueWordCountEl = document.getElementById('unique-word-count');
+        const readingTimeEl = document.getElementById('estimated-reading-time');
+
+        // Words to ignore in the repeated words analysis
+        const wordsToIgnore = new Set(['the', 'and', 'or', 'a', 'is', 'as', 'but', 'in', 'to', 'of', 'on', 'with', 'for', 'are', 'i', 'at', 'it', 'by', 'from', 'its', "it's", 'be', 'so', 'no', 'yes', 'do', 'has', 'they', 'get', 'an', 'my']);
+
+        // Function to estimate syllables in a word (heuristic-based)
+        const countSyllables = (word) => {
+            if (!word) return 0;
+            word = word.toLowerCase();
+            if (word.length <= 3) { return 1; }
+            word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+            word = word.replace(/^y/, '');
+            const vowelGroups = word.match(/[aeiouy]{1,2}/g);
+            return vowelGroups ? vowelGroups.length : 1;
+        };
+
+        // Main function to analyze text
+        const analyzeText = () => {
+            const text = textInput.value;
+
+            // 0. Calculate Character Count (all characters)
+            characterCountEl.textContent = text.length;
+
+            // 1. Calculate Letter Count (alphabetic characters only)
+            const letters = text.match(/[a-zA-Z]/g) || [];
+            letterCountEl.textContent = letters.length;
+
+            // 2. Calculate Word Count
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+            wordCountEl.textContent = words.length;
+
+            // 3. Sentence Count
+            const sentences = text.match(/[^.!?]+[.!?\n]+/g) || [];
+            const sentenceCount = sentences.length;
+            sentenceCountEl.textContent = sentenceCount;
+
+
+            if (words.length > 0) {
+                // 4. Average Word Length
+                const avgWordLength = (letters.length / words.length).toFixed(2);
+                avgWordLengthEl.textContent = isNaN(avgWordLength) ? '0.00' : avgWordLength;
+
+                // 5. Average Sentence Length
+                const avgSentenceLength = (words.length / sentenceCount).toFixed(2);
+                avgSentenceLengthEl.textContent = isNaN(avgSentenceLength) || !isFinite(avgSentenceLength) ? '0.00' : avgSentenceLength;
+
+                // 6. Find the Longest Word
+                const longestWord = words.reduce((longest, current) => {
+                    // Remove punctuation for length comparison
+                    const cleanCurrent = current.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
+                    return cleanCurrent.length > longest.length ? cleanCurrent : longest;
+                }, "");
+                longestWordEl.textContent = longestWord || 'N/A';
+                
+                // 7. Unique Word Count
+                const uniqueWords = new Set(words.map(word => word.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"")));
+                uniqueWordCountEl.textContent = uniqueWords.size;
+
+                // 8. Count Repeated Words
+                const wordFrequencies = {};
+                words.forEach(word => {
+                    // Clean and convert to lowercase
+                    const cleanedWord = word.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
+                    if (cleanedWord && !wordsToIgnore.has(cleanedWord)) {
+                        wordFrequencies[cleanedWord] = (wordFrequencies[cleanedWord] || 0) + 1;
+                    }
+                });
+
+                const repeatedWords = Object.entries(wordFrequencies)
+                    .filter(([word, count]) => count > 1)
+                    .sort((a, b) => b[1] - a[1]); // Sort by frequency, descending
+
+                displayRepeatedWords(repeatedWords);
+
+                // 9. Estimated Reading Time
+                const wpm = 225;
+                const readingTimeMinutes = words.length / wpm;
+                const totalReadingSeconds = Math.round(readingTimeMinutes * 60);
+                if (totalReadingSeconds < 1) {
+                    readingTimeEl.textContent = '~ 0s';
+                } else if (totalReadingSeconds < 60) {
+                    readingTimeEl.textContent = `~ ${totalReadingSeconds}s`;
+                } else {
+                    const minutes = Math.floor(totalReadingSeconds / 60);
+                    const seconds = totalReadingSeconds % 60;
+                    readingTimeEl.textContent = `~ ${minutes}m ${seconds}s`;
+                }
+
+                // 10. Calculate Reading Level
+                const sentenceCountForFormula = sentenceCount > 0 ? sentenceCount : 1;
+                const totalSyllables = words.reduce((total, word) => total + countSyllables(word), 0);
+                
+                // Flesch-Kincaid formula
+                const score = 0.39 * (words.length / sentenceCountForFormula) + 11.8 * (totalSyllables / words.length) - 15.59;
+                displayReadingLevel(score);
+
+
+            } else {
+                // Reset display if there is no text
+                longestWordEl.textContent = 'N/A';
+                avgWordLengthEl.textContent = '0.00';
+                avgSentenceLengthEl.textContent = '0.00';
+                uniqueWordCountEl.textContent = '0';
+                readingTimeEl.textContent = '~ 0s';
+                displayRepeatedWords([]); // Clear the list
+                readingLevelEl.textContent = 'N/A';
+            }
+        };
+
+        // Function to format and display the reading level
+        const displayReadingLevel = (score) => {
+             if (isNaN(score) || score <= 0) {
+                readingLevelEl.textContent = 'N/A';
+                return;
+            }
+            const grade = Math.round(score);
+            if (grade < 1) {
+                readingLevelEl.textContent = 'Pre-K';
+            } else if (grade >= 1 && grade <= 12) {
+                readingLevelEl.textContent = `Grade ${grade}`;
+            } else if (grade > 12 && grade <= 16) {
+                readingLevelEl.textContent = 'College';
+            } else {
+                readingLevelEl.textContent = 'Post-Grad';
+            }
+        };
+        
+        // Function to display the list of repeated words
+        const displayRepeatedWords = (repeatedWords) => {
+            if (repeatedWords.length === 0) {
+                repeatedWordsListEl.innerHTML = `<p class="text-gray-500 text-center">No repeated words found.</p>`;
+                return;
+            }
+
+            let html = '<ul class="space-y-2">';
+            repeatedWords.forEach(([word, count]) => {
+                html += `<li class="flex justify-between items-center bg-white p-2 rounded-md shadow-sm">
+                            <span class="font-medium text-gray-700">${word}</span>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${count} times</span>
+                         </li>`;
+            });
+            html += '</ul>';
+            repeatedWordsListEl.innerHTML = html;
+        };
+
+        // Function to clear the input and reset stats
+        const clearInput = () => {
+            textInput.value = "";
+            analyzeText(); // Re-run analysis on empty string to reset UI
+        };
+
+        // Event Listeners
+        textInput.addEventListener('input', analyzeText);
+        clearBtn.addEventListener('click', clearInput);
+        
+        // Initial call to set the default state
+        analyzeText();
+    </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
