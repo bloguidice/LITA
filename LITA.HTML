@@ -3,282 +3,582 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LITA™ - Loguidice Interactive Text Analyzer</title>
+    <title>LITA™ - Loguidice Interactive Text Analyzer 2.0</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Marked.js for Markdown Preview -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: {
+                            bg: '#1a1a1a',
+                            card: '#2d2d2d',
+                            text: '#e5e5e5',
+                            border: '#404040'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .stat-card {
-            transition: all 0.3s ease-in-out;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .stat-card { transition: all 0.3s ease-in-out; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        /* Markdown Styles for Preview */
+        .prose h1 { font-size: 2em; font-weight: bold; margin-bottom: 0.5em; margin-top: 0.5em; }
+        .prose h2 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5em; margin-top: 1em; }
+        .prose h3 { font-size: 1.25em; font-weight: bold; margin-bottom: 0.5em; margin-top: 1em; }
+        .prose p { margin-bottom: 1em; line-height: 1.6; }
+        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1em; }
+        .prose ol { list-style-type: decimal; padding-left: 1.5em; margin-bottom: 1em; }
+        .prose blockquote { border-left: 4px solid #ddd; padding-left: 1em; color: #666; font-style: italic; }
+        .prose code { background: #f3f4f6; padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
+        .prose pre { background: #1f2937; color: #fff; padding: 1em; border-radius: 0.5em; overflow-x: auto; margin-bottom: 1em; }
+        .prose pre code { background: transparent; padding: 0; color: inherit; }
+        
+        /* Dark mode overrides for prose */
+        .dark .prose h1, .dark .prose h2, .dark .prose h3, .dark .prose p, .dark .prose li { color: #e5e5e5; }
+        .dark .prose blockquote { border-left-color: #555; color: #aaa; }
+        .dark .prose code { background: #444; color: #e5e5e5; }
+        .dark .prose pre { background: #111; }
+        .dark .prose a { color: #6366f1; }
+        
+        /* Custom scrollbar for text area */
+        textarea::-webkit-scrollbar { width: 8px; }
+        textarea::-webkit-scrollbar-track { background: transparent; }
+        textarea::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .dark textarea::-webkit-scrollbar-thumb { background-color: #4b5563; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-50 text-gray-800 dark:bg-dark-bg dark:text-dark-text min-h-screen p-4 flex flex-col items-center transition-colors duration-300">
 
-    <main class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 md:p-10">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-900">LITA<sup class="text-2xl font-semibold">TM</sup></h1>
-            <h2 class="text-lg font-semibold text-gray-700 mt-2">Loguidice Interactive Text Analyzer</h2>
-            <p class="text-gray-600 mt-2">Paste your text below to see a detailed analysis in real-time.</p>
+    <!-- Header & Controls -->
+    <div class="w-full max-w-6xl flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                LITA<sup class="text-lg font-semibold text-gray-500">TM</sup>
+                <span class="hidden sm:inline-block px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-bold tracking-wide">v2.0</span>
+            </h1>
+            <p class="hidden md:block text-sm text-gray-500 dark:text-gray-400 mt-1">Loguidice Interactive Text Analyzer</p>
         </div>
+        
+        <!-- Logo -->
+        <img src="https://i0.wp.com/fullsteamahead365.com/wp-content/uploads/2019/01/cropped-cropped-logo-e1546637082147.png" alt="Armchair Creative Services Logo" class="h-12 w-auto mx-4 object-contain">
 
-        <!-- Text input area -->
-        <div class="relative">
-            <textarea id="text-input" class="w-full h-64 p-4 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300 resize-none" placeholder="Paste or type your text here..."></textarea>
-            <button id="clear-btn" class="absolute top-3 right-3 bg-red-500 text-white text-xs font-semibold px-3 py-1 rounded-full hover:bg-red-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">
-                CLEAR
-            </button>
-        </div>
+        <button id="theme-toggle" class="p-2 rounded-full bg-white dark:bg-dark-card shadow-sm border border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-gray-700 transition" aria-label="Toggle Dark Mode">
+            <!-- Sun Icon -->
+            <svg id="sun-icon" class="w-6 h-6 text-amber-500 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <!-- Moon Icon -->
+            <svg id="moon-icon" class="w-6 h-6 text-indigo-600 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        </button>
+    </div>
 
-        <!-- Statistics display -->
-        <div id="stats-container" class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            <!-- Character Count Card -->
-            <div class="stat-card bg-blue-50 border border-blue-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-blue-800">Character Count</h2>
-                <p id="character-count" class="text-4xl font-bold text-blue-600 mt-2">0</p>
+    <main class="bg-white dark:bg-dark-card rounded-2xl shadow-xl w-full max-w-6xl p-4 md:p-8 transition-colors duration-300 border border-gray-100 dark:border-dark-border">
+        
+        <!-- Toolbar -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-between items-center mb-4 border-b border-gray-100 dark:border-dark-border pb-4">
+            <!-- View Modes -->
+            <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-full sm:w-auto">
+                <button id="mode-write" class="flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium bg-white dark:bg-dark-card text-indigo-600 dark:text-indigo-400 shadow-sm transition-all duration-200">Write</button>
+                <button id="mode-preview" class="flex-1 sm:flex-none px-4 py-1.5 rounded-md text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200">Preview</button>
             </div>
-            <!-- Letter Count Card -->
-            <div class="stat-card bg-indigo-50 border border-indigo-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-indigo-800">Letter Count</h2>
-                <p id="letter-count" class="text-4xl font-bold text-indigo-600 mt-2">0</p>
-            </div>
-            <!-- Word Count Card -->
-            <div class="stat-card bg-green-50 border border-green-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-green-800">Word Count</h2>
-                <p id="word-count" class="text-4xl font-bold text-green-600 mt-2">0</p>
-            </div>
-            <!-- Average Word Length Card -->
-            <div class="stat-card bg-pink-50 border border-pink-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-pink-800">Avg. Word Length</h2>
-                <p id="average-word-length" class="text-4xl font-bold text-pink-600 mt-2">0.00</p>
-            </div>
-            <!-- Sentence Count Card -->
-            <div class="stat-card bg-cyan-50 border border-cyan-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-cyan-800">Sentence Count</h2>
-                <p id="sentence-count" class="text-4xl font-bold text-cyan-600 mt-2">0</p>
-            </div>
-            <!-- Average Sentence Length Card -->
-            <div class="stat-card bg-orange-50 border border-orange-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-orange-800">Avg. Sentence Length</h2>
-                <p id="average-sentence-length" class="text-4xl font-bold text-orange-600 mt-2">0.00</p>
-            </div>
-            <!-- Longest Word Card -->
-            <div class="stat-card bg-yellow-50 border border-yellow-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-yellow-800">Longest Word</h2>
-                <p id="longest-word" class="text-2xl font-bold text-yellow-600 mt-4 break-words h-12 flex items-center justify-center">N/A</p>
-            </div>
-            <!-- Unique Word Count Card -->
-            <div class="stat-card bg-lime-50 border border-lime-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-lime-800">Unique Words</h2>
-                <p id="unique-word-count" class="text-4xl font-bold text-lime-600 mt-2">0</p>
-            </div>
-            <!-- Estimated Reading Time Card -->
-            <div class="stat-card bg-teal-50 border border-teal-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-teal-800">Reading Time</h2>
-                <p id="estimated-reading-time" class="text-3xl font-bold text-teal-600 mt-2">~ 0s</p>
-            </div>
-            <!-- Reading Level Card -->
-            <div class="stat-card bg-purple-50 border border-purple-200 p-6 rounded-lg text-center">
-                <h2 class="text-lg font-semibold text-purple-800">Reading Level</h2>
-                <p id="reading-level" class="text-3xl font-bold text-purple-600 mt-2">N/A</p>
+
+            <!-- Actions -->
+            <div class="flex gap-3 w-full sm:w-auto justify-end">
+                <button id="export-btn" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Export
+                </button>
+                <button id="clear-btn" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    Clear
+                </button>
             </div>
         </div>
 
-        <!-- Repeated Words Display -->
-        <div id="repeated-words-container" class="mt-8">
-            <h3 class="text-xl font-semibold text-gray-800 text-center mb-4">Repeated Uncommon Words Analysis</h3>
-            <div id="repeated-words-list" class="bg-gray-100 p-4 rounded-lg min-h-[100px] max-h-48 overflow-y-auto">
-                 <p class="text-gray-500 text-center">Repeated words (excluding 'the', 'and', 'or') will appear here.</p>
+        <!-- Input / Preview Area -->
+        <div class="relative min-h-[300px] mb-8 group">
+            <textarea id="text-input" class="w-full h-[300px] p-4 text-base border-2 border-gray-200 dark:border-dark-border dark:bg-dark-bg dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition resize-y font-mono leading-relaxed placeholder-gray-400 dark:placeholder-gray-600" placeholder="Type or paste your content here to begin analysis..."></textarea>
+            <div id="markdown-preview" class="w-full h-[300px] p-6 border-2 border-gray-200 dark:border-dark-border dark:bg-dark-bg rounded-xl overflow-y-auto hidden prose dark:prose-invert max-w-none"></div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+            <!-- Row 1: Basic Counts -->
+            <div class="stat-card bg-blue-50 dark:bg-gray-800 border border-blue-100 dark:border-gray-700 p-4 rounded-xl text-center">
+                <p class="text-xs font-bold text-blue-800 dark:text-blue-400 uppercase tracking-wide opacity-70">Words</p>
+                <p id="word-count" class="text-3xl font-bold text-blue-600 dark:text-blue-300 mt-1">0</p>
+            </div>
+            <div class="stat-card bg-indigo-50 dark:bg-gray-800 border border-indigo-100 dark:border-gray-700 p-4 rounded-xl text-center">
+                <p class="text-xs font-bold text-indigo-800 dark:text-indigo-400 uppercase tracking-wide opacity-70">Characters</p>
+                <p id="character-count" class="text-3xl font-bold text-indigo-600 dark:text-indigo-300 mt-1">0</p>
+            </div>
+            <!-- Letter Count (New) -->
+            <div class="stat-card bg-sky-50 dark:bg-gray-800 border border-sky-100 dark:border-gray-700 p-4 rounded-xl text-center">
+                <p class="text-xs font-bold text-sky-800 dark:text-sky-400 uppercase tracking-wide opacity-70">Letters</p>
+                <p id="letter-count" class="text-3xl font-bold text-sky-600 dark:text-sky-300 mt-1">0</p>
+            </div>
+            <div class="stat-card bg-green-50 dark:bg-gray-800 border border-green-100 dark:border-gray-700 p-4 rounded-xl text-center">
+                <p class="text-xs font-bold text-green-800 dark:text-green-400 uppercase tracking-wide opacity-70">Sentences</p>
+                <p id="sentence-count" class="text-3xl font-bold text-green-600 dark:text-green-300 mt-1">0</p>
+            </div>
+            <div class="stat-card bg-teal-50 dark:bg-gray-800 border border-teal-100 dark:border-gray-700 p-4 rounded-xl text-center">
+                <p class="text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wide opacity-70">Paragraphs</p>
+                <p id="paragraph-count" class="text-3xl font-bold text-teal-600 dark:text-teal-300 mt-1">0</p>
+            </div>
+            <!-- Unique Words (New) -->
+            <div class="stat-card bg-lime-50 dark:bg-gray-800 border border-lime-100 dark:border-gray-700 p-4 rounded-xl text-center">
+                <p class="text-xs font-bold text-lime-800 dark:text-lime-400 uppercase tracking-wide opacity-70">Unique Words</p>
+                <p id="unique-word-count" class="text-3xl font-bold text-lime-600 dark:text-lime-300 mt-1">0</p>
+            </div>
+            
+            <!-- Row 2: Analysis -->
+            <!-- Avg Word Length (New) -->
+            <div class="stat-card bg-pink-50 dark:bg-gray-800 border border-pink-100 dark:border-gray-700 p-4 rounded-xl text-center">
+                <p class="text-xs font-bold text-pink-800 dark:text-pink-400 uppercase tracking-wide opacity-70">Avg Word Len</p>
+                <p id="avg-word-len" class="text-3xl font-bold text-pink-600 dark:text-pink-300 mt-1">0.00</p>
+            </div>
+            
+            <!-- Reading Time (Spans 2) -->
+            <div class="stat-card bg-purple-50 dark:bg-gray-800 border border-purple-100 dark:border-gray-700 p-4 rounded-xl text-center col-span-2 flex flex-col justify-center">
+                <p class="text-xs font-bold text-purple-800 dark:text-purple-400 uppercase tracking-wide opacity-70">Reading Time</p>
+                <p id="reading-time" class="text-3xl font-bold text-purple-600 dark:text-purple-300 mt-1">0s</p>
+            </div>
+
+            <!-- Longest Word (New) (Spans 3) -->
+            <div class="stat-card bg-yellow-50 dark:bg-gray-800 border border-yellow-100 dark:border-gray-700 p-4 rounded-xl text-center col-span-2 md:col-span-3 lg:col-span-3 flex flex-col justify-center">
+                <p class="text-xs font-bold text-yellow-800 dark:text-yellow-400 uppercase tracking-wide opacity-70">Longest Word</p>
+                <p id="longest-word" class="text-xl font-bold text-yellow-600 dark:text-yellow-300 mt-1 break-all truncate px-4">N/A</p>
+            </div>
+        </div>
+
+        <!-- Deep Analysis Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- Style & Tone -->
+            <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-dark-border shadow-sm">
+                <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-5 border-b border-gray-200 dark:border-gray-700 pb-2">Style & Tone</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center group">
+                        <span class="text-gray-600 dark:text-gray-300 text-sm group-hover:text-indigo-600 transition-colors">Reading Level</span>
+                        <span id="reading-level" class="font-bold text-indigo-600 dark:text-indigo-400 text-lg">N/A</span>
+                    </div>
+                    <div class="flex justify-between items-center group">
+                        <div class="flex flex-col">
+                            <span class="text-gray-600 dark:text-gray-300 text-sm group-hover:text-orange-500 transition-colors">Passive Voice</span>
+                            <span class="text-[10px] text-gray-400">Avoid where possible</span>
+                        </div>
+                        <span id="passive-count" class="font-bold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">0</span>
+                    </div>
+                    <div class="flex justify-between items-center group">
+                        <div class="flex flex-col">
+                            <span class="text-gray-600 dark:text-gray-300 text-sm group-hover:text-yellow-500 transition-colors">Adverbs (-ly)</span>
+                            <span class="text-[10px] text-gray-400">Use sparingly</span>
+                        </div>
+                        <span id="adverb-count" class="font-bold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-sm">0</span>
+                    </div>
+                     <div class="flex justify-between items-center group">
+                        <span class="text-gray-600 dark:text-gray-300 text-sm">Avg. Sent. Length</span>
+                        <span id="avg-sent-len" class="font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sentence Graph -->
+            <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-dark-border shadow-sm lg:col-span-2 flex flex-col">
+                <div class="flex justify-between items-center mb-2 border-b border-gray-200 dark:border-gray-700 pb-2">
+                    <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sentence Rhythm</h3>
+                    <span class="text-[10px] text-gray-400">Bar Height = Words per Sentence</span>
+                </div>
+                <div class="flex-grow flex items-end justify-center relative h-40 w-full mt-2">
+                    <canvas id="sentence-chart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keywords Analysis -->
+        <div class="mt-8">
+            <h3 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Keyword Density (Top Uncommon Words)</h3>
+            <div id="keywords-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                 <div class="col-span-full py-8 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                    <p class="text-gray-400 text-sm">Start typing to see keyword density analysis.</p>
+                 </div>
             </div>
         </div>
     </main>
 
+    <footer class="mt-8 text-gray-400 dark:text-gray-600 text-xs mb-8">
+        &copy; 2026 Armchair Creative Services, LLC
+    </footer>
+
+    <!-- Custom Modal for Clear Confirmation -->
+    <div id="clear-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white dark:bg-dark-card rounded-xl shadow-2xl max-w-sm w-full p-6 border border-gray-100 dark:border-dark-border transform transition-all scale-100">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 mb-4">
+                    <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Clear all text?</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">This will remove all content and analysis. This action cannot be undone.</p>
+                <div class="flex gap-3 justify-center">
+                    <button id="modal-cancel" class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition">Cancel</button>
+                    <button id="modal-confirm" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition shadow-sm">Clear It</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // DOM element references
+        // --- DOM Elements ---
         const textInput = document.getElementById('text-input');
-        const letterCountEl = document.getElementById('letter-count');
-        const characterCountEl = document.getElementById('character-count');
-        const wordCountEl = document.getElementById('word-count');
-        const longestWordEl = document.getElementById('longest-word');
-        const repeatedWordsListEl = document.getElementById('repeated-words-list');
+        const previewEl = document.getElementById('markdown-preview');
         const clearBtn = document.getElementById('clear-btn');
-        const readingLevelEl = document.getElementById('reading-level');
+        const exportBtn = document.getElementById('export-btn');
+        const themeToggle = document.getElementById('theme-toggle');
+        const modeWriteBtn = document.getElementById('mode-write');
+        const modePreviewBtn = document.getElementById('mode-preview');
+        
+        // Modal Elements
+        const clearModal = document.getElementById('clear-modal');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalConfirm = document.getElementById('modal-confirm');
+        
+        // Stats Elements
+        const wordCountEl = document.getElementById('word-count');
+        const charCountEl = document.getElementById('character-count');
+        const letterCountEl = document.getElementById('letter-count'); // New
         const sentenceCountEl = document.getElementById('sentence-count');
-        const avgWordLengthEl = document.getElementById('average-word-length');
-        const avgSentenceLengthEl = document.getElementById('average-sentence-length');
-        const uniqueWordCountEl = document.getElementById('unique-word-count');
-        const readingTimeEl = document.getElementById('estimated-reading-time');
+        const paraCountEl = document.getElementById('paragraph-count');
+        const uniqueWordCountEl = document.getElementById('unique-word-count'); // New
+        const avgWordLenEl = document.getElementById('avg-word-len'); // New
+        const readingTimeEl = document.getElementById('reading-time');
+        const longestWordEl = document.getElementById('longest-word'); // New
+        
+        const readingLevelEl = document.getElementById('reading-level');
+        const passiveCountEl = document.getElementById('passive-count');
+        const adverbCountEl = document.getElementById('adverb-count');
+        const avgSentLenEl = document.getElementById('avg-sent-len');
+        const keywordsListEl = document.getElementById('keywords-list');
+        const sentenceChart = document.getElementById('sentence-chart');
 
-        // Words to ignore in the repeated words analysis
-        const wordsToIgnore = new Set(['the', 'and', 'or', 'a', 'is', 'as', 'but', 'in', 'to', 'of', 'on', 'with', 'for', 'are', 'i', 'at', 'it', 'by', 'from', 'its', "it's", 'be', 'so', 'no', 'yes', 'do', 'has', 'they', 'get', 'an', 'my']);
+        // --- Config ---
+        const wordsToIgnore = new Set(['the', 'and', 'or', 'a', 'is', 'as', 'but', 'in', 'to', 'of', 'on', 'with', 'for', 'are', 'i', 'at', 'it', 'by', 'from', 'its', "it's", 'be', 'so', 'no', 'yes', 'do', 'has', 'they', 'get', 'an', 'my', 'that', 'this', 'was', 'have', 'had', 'not', 'you', 'we', 'he', 'she', 'his', 'her', 'their', 'them', 'if', 'when', 'what', 'which', 'who']);
+        const passiveVerbs = new Set(['am', 'are', 'is', 'was', 'were', 'be', 'been', 'being']);
 
-        // Function to estimate syllables in a word (heuristic-based)
+        // --- Theme Logic ---
+        const toggleTheme = () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('lita-theme', isDark ? 'dark' : 'light');
+            drawChart(); // Redraw chart to match theme colors
+        };
+        
+        if (localStorage.getItem('lita-theme') === 'dark' || (!('lita-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // --- View Modes ---
+        const setMode = (mode) => {
+            if (mode === 'write') {
+                textInput.classList.remove('hidden');
+                previewEl.classList.add('hidden');
+                
+                modeWriteBtn.classList.remove('bg-white', 'dark:bg-dark-card', 'text-indigo-600', 'dark:text-indigo-400');
+                modeWriteBtn.classList.add('bg-white', 'dark:bg-dark-card', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                
+                modePreviewBtn.classList.add('text-gray-500', 'dark:text-gray-400');
+                modePreviewBtn.classList.remove('bg-white', 'dark:bg-dark-card', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                
+                textInput.focus();
+            } else {
+                textInput.classList.add('hidden');
+                previewEl.classList.remove('hidden');
+                previewEl.innerHTML = marked.parse(textInput.value);
+                
+                modePreviewBtn.classList.remove('text-gray-500', 'dark:text-gray-400');
+                modePreviewBtn.classList.add('bg-white', 'dark:bg-dark-card', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                
+                modeWriteBtn.classList.remove('bg-white', 'dark:bg-dark-card', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+                modeWriteBtn.classList.add('text-gray-500', 'dark:text-gray-400');
+            }
+        };
+
+        modeWriteBtn.addEventListener('click', () => setMode('write'));
+        modePreviewBtn.addEventListener('click', () => setMode('preview'));
+
+        // --- Analysis Logic ---
         const countSyllables = (word) => {
             if (!word) return 0;
             word = word.toLowerCase();
-            if (word.length <= 3) { return 1; }
+            if (word.length <= 3) return 1;
             word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
             word = word.replace(/^y/, '');
             const vowelGroups = word.match(/[aeiouy]{1,2}/g);
             return vowelGroups ? vowelGroups.length : 1;
         };
 
-        // Main function to analyze text
         const analyzeText = () => {
             const text = textInput.value;
+            localStorage.setItem('lita-autosave', text);
 
-            // 0. Calculate Character Count (all characters)
-            characterCountEl.textContent = text.length;
-
-            // 1. Calculate Letter Count (alphabetic characters only)
-            const letters = text.match(/[a-zA-Z]/g) || [];
+            const words = text.trim().split(/[\s\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^`{|}~]+/).filter(w => w.length > 0);
+            const rawSentences = text.match(/[^.!?]+[.!?]+(\s+|$)/g) || (text.trim().length > 0 ? [text] : []);
+            const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+            const letters = text.match(/[a-zA-Z]/g) || []; // Letter Count Logic
+            
+            // Stats
+            wordCountEl.textContent = words.length;
+            charCountEl.textContent = text.length;
+            sentenceCountEl.textContent = rawSentences.length;
+            paraCountEl.textContent = paragraphs.length;
             letterCountEl.textContent = letters.length;
 
-            // 2. Calculate Word Count
-            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-            wordCountEl.textContent = words.length;
-
-            // 3. Sentence Count
-            const sentences = text.match(/[^.!?]+[.!?\n]+/g) || [];
-            const sentenceCount = sentences.length;
-            sentenceCountEl.textContent = sentenceCount;
-
-
             if (words.length > 0) {
-                // 4. Average Word Length
-                const avgWordLength = (letters.length / words.length).toFixed(2);
-                avgWordLengthEl.textContent = isNaN(avgWordLength) ? '0.00' : avgWordLength;
+                // Avg Word Length
+                const avgWordLen = (letters.length / words.length).toFixed(2);
+                avgWordLenEl.textContent = avgWordLen;
 
-                // 5. Average Sentence Length
-                const avgSentenceLength = (words.length / sentenceCount).toFixed(2);
-                avgSentenceLengthEl.textContent = isNaN(avgSentenceLength) || !isFinite(avgSentenceLength) ? '0.00' : avgSentenceLength;
-
-                // 6. Find the Longest Word
-                const longestWord = words.reduce((longest, current) => {
-                    // Remove punctuation for length comparison
-                    const cleanCurrent = current.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
-                    return cleanCurrent.length > longest.length ? cleanCurrent : longest;
-                }, "");
-                longestWordEl.textContent = longestWord || 'N/A';
-                
-                // 7. Unique Word Count
-                const uniqueWords = new Set(words.map(word => word.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"")));
+                // Unique Words
+                const uniqueWords = new Set(words.map(w => w.toLowerCase()));
                 uniqueWordCountEl.textContent = uniqueWords.size;
 
-                // 8. Count Repeated Words
-                const wordFrequencies = {};
-                words.forEach(word => {
-                    // Clean and convert to lowercase
-                    const cleanedWord = word.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
-                    if (cleanedWord && !wordsToIgnore.has(cleanedWord)) {
-                        wordFrequencies[cleanedWord] = (wordFrequencies[cleanedWord] || 0) + 1;
-                    }
-                });
+                // Longest Word
+                const longest = words.reduce((a, b) => a.length >= b.length ? a : b, "");
+                longestWordEl.textContent = longest || "N/A";
 
-                const repeatedWords = Object.entries(wordFrequencies)
-                    .filter(([word, count]) => count > 1)
-                    .sort((a, b) => b[1] - a[1]); // Sort by frequency, descending
-
-                displayRepeatedWords(repeatedWords);
-
-                // 9. Estimated Reading Time
-                const wpm = 225;
-                const readingTimeMinutes = words.length / wpm;
-                const totalReadingSeconds = Math.round(readingTimeMinutes * 60);
-                if (totalReadingSeconds < 1) {
-                    readingTimeEl.textContent = '~ 0s';
-                } else if (totalReadingSeconds < 60) {
-                    readingTimeEl.textContent = `~ ${totalReadingSeconds}s`;
-                } else {
-                    const minutes = Math.floor(totalReadingSeconds / 60);
-                    const seconds = totalReadingSeconds % 60;
-                    readingTimeEl.textContent = `~ ${minutes}m ${seconds}s`;
+                // Reading Time
+                const seconds = Math.round((words.length / 225) * 60);
+                if (seconds < 60) readingTimeEl.textContent = `${seconds}s`;
+                else {
+                    const m = Math.floor(seconds/60);
+                    const s = seconds%60;
+                    readingTimeEl.textContent = `${m}m ${s}s`;
                 }
 
-                // 10. Calculate Reading Level
-                const sentenceCountForFormula = sentenceCount > 0 ? sentenceCount : 1;
-                const totalSyllables = words.reduce((total, word) => total + countSyllables(word), 0);
+                // Reading Level
+                const totalSyllables = words.reduce((acc, w) => acc + countSyllables(w), 0);
+                const sentCountSafe = rawSentences.length || 1;
+                const fkScore = 0.39 * (words.length / sentCountSafe) + 11.8 * (totalSyllables / words.length) - 15.59;
+                let grade = Math.round(fkScore);
                 
-                // Flesch-Kincaid formula
-                const score = 0.39 * (words.length / sentenceCountForFormula) + 11.8 * (totalSyllables / words.length) - 15.59;
-                displayReadingLevel(score);
+                let gradeText = "";
+                if (grade < 1) gradeText = "Pre-K";
+                else if (grade <= 12) gradeText = `Grade ${grade}`;
+                else if (grade <= 16) gradeText = "College";
+                else gradeText = "Post-Grad";
+                
+                readingLevelEl.textContent = gradeText;
 
+                // Stylistic
+                const adverbs = words.filter(w => w.toLowerCase().endsWith('ly') && w.length > 4); 
+                adverbCountEl.textContent = adverbs.length;
+
+                let passiveHits = 0;
+                const seqWords = text.trim().split(/\s+/).filter(w => w.length > 0);
+                for (let i = 0; i < seqWords.length - 1; i++) {
+                    const w1 = seqWords[i].toLowerCase().replace(/[^a-z]/g, '');
+                    const w2 = seqWords[i+1].toLowerCase().replace(/[^a-z]/g, '');
+                    if (passiveVerbs.has(w1) && w2.endsWith('ed')) {
+                        passiveHits++;
+                    }
+                }
+                passiveCountEl.textContent = passiveHits;
+
+                const avgLen = (words.length / sentCountSafe).toFixed(1);
+                avgSentLenEl.textContent = avgLen;
+
+                // Keyword Density
+                const freqMap = {};
+                words.forEach(w => {
+                    const clean = w.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (clean && !wordsToIgnore.has(clean) && clean.length > 2 && isNaN(clean)) {
+                        freqMap[clean] = (freqMap[clean] || 0) + 1;
+                    }
+                });
+                
+                const sortedKeywords = Object.entries(freqMap)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 8); // Top 8
+
+                if(sortedKeywords.length > 0) {
+                    keywordsListEl.innerHTML = sortedKeywords.map(([word, count]) => {
+                        const density = ((count / words.length) * 100).toFixed(1);
+                        return `
+                        <div class="flex justify-between items-center bg-white dark:bg-dark-card border border-gray-100 dark:border-gray-700 px-3 py-2 rounded-lg shadow-sm">
+                            <span class="font-medium text-gray-700 dark:text-gray-300 capitalize">${word}</span>
+                            <div class="text-right">
+                                <span class="block text-xs font-bold text-indigo-600 dark:text-indigo-400">${count}</span>
+                                <span class="block text-[10px] text-gray-400">${density}%</span>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    keywordsListEl.innerHTML = '<div class="col-span-full text-center text-gray-400 text-sm py-4">No significant keywords yet.</div>';
+                }
+
+                // Graph Data
+                const sentenceLengths = rawSentences.map(s => {
+                    return s.trim().split(/\s+/).filter(w=>w.length>0).length;
+                }).filter(len => len > 0);
+                
+                drawChart(sentenceLengths);
 
             } else {
-                // Reset display if there is no text
-                longestWordEl.textContent = 'N/A';
-                avgWordLengthEl.textContent = '0.00';
-                avgSentenceLengthEl.textContent = '0.00';
+                // Reset
+                readingTimeEl.textContent = '0s';
+                readingLevelEl.textContent = 'N/A';
+                avgSentLenEl.textContent = '0';
+                letterCountEl.textContent = '0';
+                avgWordLenEl.textContent = '0.00';
                 uniqueWordCountEl.textContent = '0';
-                readingTimeEl.textContent = '~ 0s';
-                displayRepeatedWords([]); // Clear the list
-                readingLevelEl.textContent = 'N/A';
+                longestWordEl.textContent = 'N/A';
+                keywordsListEl.innerHTML = '<div class="col-span-full py-8 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg"><p class="text-gray-400 text-sm">Start typing to see keyword density.</p></div>';
+                drawChart([]);
+                passiveCountEl.textContent = '0';
+                adverbCountEl.textContent = '0';
             }
         };
 
-        // Function to format and display the reading level
-        const displayReadingLevel = (score) => {
-             if (isNaN(score) || score <= 0) {
-                readingLevelEl.textContent = 'N/A';
-                return;
-            }
-            const grade = Math.round(score);
-            if (grade < 1) {
-                readingLevelEl.textContent = 'Pre-K';
-            } else if (grade >= 1 && grade <= 12) {
-                readingLevelEl.textContent = `Grade ${grade}`;
-            } else if (grade > 12 && grade <= 16) {
-                readingLevelEl.textContent = 'College';
-            } else {
-                readingLevelEl.textContent = 'Post-Grad';
-            }
-        };
-        
-        // Function to display the list of repeated words
-        const displayRepeatedWords = (repeatedWords) => {
-            if (repeatedWords.length === 0) {
-                repeatedWordsListEl.innerHTML = `<p class="text-gray-500 text-center">No repeated words found.</p>`;
+        // --- Canvas Chart Logic ---
+        const drawChart = (data = []) => {
+            const ctx = sentenceChart.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = sentenceChart.parentElement.getBoundingClientRect();
+            sentenceChart.width = rect.width * dpr;
+            sentenceChart.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            if (data.length === 0) {
+                ctx.strokeStyle = document.documentElement.classList.contains('dark') ? '#333' : '#eee';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, rect.height/2);
+                ctx.lineTo(rect.width, rect.height/2);
+                ctx.stroke();
                 return;
             }
 
-            let html = '<ul class="space-y-2">';
-            repeatedWords.forEach(([word, count]) => {
-                html += `<li class="flex justify-between items-center bg-white p-2 rounded-md shadow-sm">
-                            <span class="font-medium text-gray-700">${word}</span>
-                            <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">${count} times</span>
-                         </li>`;
+            const isDark = document.documentElement.classList.contains('dark');
+            const barColor = isDark ? '#818cf8' : '#6366f1';
+            const maxVal = Math.max(Math.max(...data), 30); 
+            const gap = 2;
+            const availableWidth = rect.width - ((data.length - 1) * gap);
+            const barWidth = Math.max(2, availableWidth / data.length);
+            
+            data.forEach((val, i) => {
+                const barHeight = (val / maxVal) * (rect.height * 0.9);
+                const x = i * (barWidth + gap);
+                const y = rect.height - barHeight;
+                
+                ctx.fillStyle = barColor;
+                if (barWidth > 5) {
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, barWidth, barHeight, [4, 4, 0, 0]);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(x, y, barWidth, barHeight);
+                }
+                
+                if (val > 40) {
+                    ctx.fillStyle = isDark ? '#f87171' : '#ef4444'; 
+                    ctx.fillRect(x, y, barWidth, 4);
+                }
             });
-            html += '</ul>';
-            repeatedWordsListEl.innerHTML = html;
         };
 
-        // Function to clear the input and reset stats
-        const clearInput = () => {
-            textInput.value = "";
-            analyzeText(); // Re-run analysis on empty string to reset UI
-        };
+        // --- Export Logic ---
+        exportBtn.addEventListener('click', () => {
+            const text = textInput.value;
+            if(!text) return;
+            
+            const stats = `
+LITA REPORT
+==================================================
+Date: ${new Date().toLocaleString()}
 
-        // Event Listeners
+SUMMARY STATISTICS
+------------------
+Word Count:      ${wordCountEl.textContent}
+Character Count: ${charCountEl.textContent}
+Letter Count:    ${letterCountEl.textContent}
+Sentence Count:  ${sentenceCountEl.textContent}
+Paragraph Count: ${paraCountEl.textContent}
+Unique Words:    ${uniqueWordCountEl.textContent}
+Avg Word Length: ${avgWordLenEl.textContent}
+Longest Word:    ${longestWordEl.textContent}
+Reading Level:   ${readingLevelEl.textContent}
+Reading Time:    ${readingTimeEl.textContent}
+
+STYLE CHECKS
+------------
+Passive Voice:   ${passiveCountEl.textContent} occurrences
+Adverb Usage:    ${adverbCountEl.textContent} occurrences
+Avg Sent Length: ${avgSentLenEl.textContent} words
+
+TEXT CONTENT
+==================================================
+${text}
+            `;
+            
+            const blob = new Blob([stats], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `LITA-Report-${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        });
+
+        // --- Listeners & Modal Logic ---
         textInput.addEventListener('input', analyzeText);
-        clearBtn.addEventListener('click', clearInput);
         
-        // Initial call to set the default state
+        clearBtn.addEventListener('click', () => {
+            clearModal.classList.remove('hidden');
+        });
+
+        modalCancel.addEventListener('click', () => {
+            clearModal.classList.add('hidden');
+            textInput.focus();
+        });
+
+        modalConfirm.addEventListener('click', () => {
+            textInput.value = '';
+            localStorage.removeItem('lita-autosave');
+            analyzeText();
+            clearModal.classList.add('hidden');
+            textInput.focus();
+        });
+        
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                analyzeText(); 
+            }, 100);
+        });
+
+        // Init
+        const savedText = localStorage.getItem('lita-autosave');
+        if (savedText) {
+            textInput.value = savedText;
+        }
         analyzeText();
     </script>
-
 </body>
 </html>
-
-
-
-
-
-
-
-
